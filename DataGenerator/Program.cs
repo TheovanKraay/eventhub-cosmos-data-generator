@@ -8,10 +8,15 @@
 
     public class Program
     {
-        private static EventHubClient eventHubClient;
+        private static EventHubClient eventHubClient1;
+        private static EventHubClient eventHubClient2;
         private const string EventHubConnectionString = "EventHubConnectionString";
-        private const string EventHubName = "EventHubName";
+        private const string EventHubName = "eventhub";
 
+        private const string EventHubConnectionString2 = "EventHubConnectionString2";
+        private const string EventHubName2 = "eventhub";
+
+        
         public static void Main(string[] args)
         {
             MainAsync(args).GetAwaiter().GetResult();
@@ -27,7 +32,14 @@
                 EntityPath = EventHubName
             };
 
-            eventHubClient = EventHubClient.CreateFromConnectionString(connectionStringBuilder.ToString());
+            eventHubClient1 = EventHubClient.CreateFromConnectionString(connectionStringBuilder.ToString());
+
+            var connectionStringBuilder2 = new EventHubsConnectionStringBuilder(EventHubConnectionString2)
+            {
+                EntityPath = EventHubName2
+            };
+
+            eventHubClient2 = EventHubClient.CreateFromConnectionString(connectionStringBuilder2.ToString());
 
             //send to the event hubs in parallel
 
@@ -61,7 +73,7 @@
                     //var message = $"Message {i}";
                     var message = "{\"id\":\""+ id + "\",\"pk\": \"uksouth\"}";
                     Console.WriteLine($"Sending message: {message}");
-                    await eventHubClient.SendAsync(new EventData(Encoding.UTF8.GetBytes(message)));
+                    await eventHubClient1.SendAsync(new EventData(Encoding.UTF8.GetBytes(message)));
                 }
                 catch (Exception exception)
                 {
@@ -84,7 +96,7 @@
                     //var message = $"Message {i}";
                     var message = "{\"id\":\"" + id + "\",\"pk\": \"ukwest\"}";
                     Console.WriteLine($"Sending message: {message}");
-                    await eventHubClient.SendAsync(new EventData(Encoding.UTF8.GetBytes(message)));
+                    await eventHubClient2.SendAsync(new EventData(Encoding.UTF8.GetBytes(message)));
                 }
                 catch (Exception exception)
                 {
