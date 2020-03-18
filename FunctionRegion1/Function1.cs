@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Azure.Documents;
+using Microsoft.Azure.Cosmos;
 using Microsoft.Azure.Documents.Client;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
@@ -22,6 +22,8 @@ namespace FunctionRegion1
         private static readonly string _databaseId = "database";
         private static readonly string _containerId = "asa";
         private static ConnectionPolicy connectionPolicy = new ConnectionPolicy();
+        private static CosmosClient cosmosClient = new CosmosClient(_endpointUrl, _primaryKey, 
+            new CosmosClientOptions() {ApplicationRegion = Regions.UKSouth,}); //set preferred region
 
         //req coming from stream analytics would be in something like this format:
 
@@ -36,14 +38,13 @@ namespace FunctionRegion1
             log.LogInformation("C# HTTP trigger function processed a request.");
 
             string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
-            connectionPolicy.PreferredLocations.Add(LocationNames.UKSouth); // first preference
 
             var messages = JsonConvert.DeserializeObject<List<object>>(requestBody);
 
-            DocumentClient docClient = new DocumentClient(accountEndPoint, _primaryKey, connectionPolicy);
+            var container = cosmosClient.GetContainer(_databaseId, _containerId);
             foreach (var message in messages)
             {
-                await docClient.CreateDocumentAsync(UriFactory.CreateDocumentCollectionUri(_databaseId, _containerId), message);
+                await container.CreateItemAsync(message);
             }
                 
             Console.WriteLine("requestBody: " + requestBody);
